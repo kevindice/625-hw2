@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 {
     if(argc < 2 || argc > 3 || (argc == 3 && strcmp(argv[2], "-v")) ){
         printf("Usage: %s <number of threads>\n", argv[0]);
-        printf("Optionally, you may use the -v flag for details on division of work among processes.\n\n");
+        printf("Optionally, you may use the -v flag for verbose output, including details on division of work among threads.\n\n");
         exit(1);
     }
 
