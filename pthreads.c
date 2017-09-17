@@ -9,7 +9,7 @@
 int num_threads;
 
 // timing and info
-int debug_flag;
+int verbose_flag;
 struct timeval t1, t2;
 double elapsedTime;
 char hostname[1024];
@@ -43,13 +43,13 @@ void *eulers_method(void *tid)
     end = (blockid + 1) * (NUM_ITER/num_threads);
     if(blockid == num_threads - 1) end = NUM_ITER;
 
-    if(debug_flag) printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
+    if(verbose_flag) printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
 
     for (i = start; i < end; i++)
     {
         x = (i + 0.25)*st;
         local_sum += 4.0/(x*x+1);
-        if(debug_flag && !(i%100000000)) printf("Prog\tThread %d\tIteration %d\n", blockid, i);
+        if(verbose_flag && !(i%100000000)) printf("Prog\tThread %d\tIteration %d\n", blockid, i);
     }
 
     pthread_mutex_lock(&mutexsum);
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    debug_flag = (argc == 3);
+    verbose_flag = (argc == 3);
 
 
     int i;
