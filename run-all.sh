@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l mem=32M
+#$ -l mem=512M
 #$ -l h_rt=0:15:00
 #$ -t 1-20
 #$ -cwd
