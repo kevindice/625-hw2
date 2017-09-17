@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define NUM_ITER 1000000000
-#define NUM_THREADS 12
+#define NUM_THREADS 2
 
 // timing and info
 struct timeval t1, t2;
@@ -47,6 +47,7 @@ void *eulers_method(void *tid)
     {
         x = (i + 0.25)*st;
         local_sum += 4.0/(x*x+1);
+        if(!(i%100000000)) printf("Prog\tThread %d\tIteration %d\n", blockid, i);
     }
 
     pthread_mutex_lock(&mutexsum);
