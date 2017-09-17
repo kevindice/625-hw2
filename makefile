@@ -7,7 +7,7 @@ pthreads: pthreads.c
 	cc -pthread pthreads.c -o pthreads
 
 openmp: openmp.c
-	cc openmp.c -o openmp
+	cc -fopenmp openmp.c -o openmp
 
 cleanup:
 	rm run-all.sh.*

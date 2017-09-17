@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <omp.h>
+
 
 #define NUM_ITER 1000000000
 
@@ -10,34 +13,48 @@ struct timeval t1, t2;
 double elapsedTime;
 char hostname[1024];
 
-int i;
+int i, verbose_flag, num_threads_requested;
+double st = 1.0/NUM_ITER;
 double sum = 0.0;
 double x = 0.0;
-double st = 1.0/NUM_ITER;
 
-void eulers_method()
-{
-    for (i = 0; i < NUM_ITER; i++)
-    {
-        x = (i + 0.25)*st;
-        sum += 4.0/(x*x+1);
-    }
-}
 
 void print_results()
 {
-    printf("DATA\t%s\t%f\t%f\n", hostname, elapsedTime, sum);
+    printf("DATA\t%s\t%d\t%f\t%f\tomp\n", hostname, num_threads_requested, elapsedTime, sum);
 }
 
 int main(int argc, char *argv[])
 {
+    if(argc < 2 || argc > 3 || (argc == 3 && strcmp(argv[2], "-v")) ){
+        printf("Usage: %s <number of threads>\n", argv[0]);
+        printf("Optionally, you may use the -v flag for verbose output, including details on division of work among threads.\n\n");
+        exit(1);
+    }
+
+    verbose_flag = (argc == 3);
+
+    int tid;
+    num_threads_requested = atoi(argv[1]);
+
+
     gethostname(hostname, 1023);
 
     printf("DEBUG: starting on %s\n", hostname);
 
     gettimeofday(&t1, NULL);
 
-    eulers_method();
+    omp_set_dynamic(0);
+    omp_set_num_threads(num_threads_requested);
+    #pragma omp parallel for \
+        default(shared) private(i,tid,x) \
+        reduction(+:sum)
+
+        for(i = 0; i < NUM_ITER; i++)
+        {
+            x = (i + 0.25)*st;
+            sum += 4.0/(x*x+1);
+        }
 
     gettimeofday(&t2, NULL);
 
