@@ -1,27 +1,58 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #define NUM_ITER 1000000000
+#define NUM_THREADS 12
 
 // timing and info
 struct timeval t1, t2;
 double elapsedTime;
 char hostname[1024];
 
-int i;
+// pthread stuff
+int thread_counter = 0;
+pthread_mutex_t mutexsum;
+pthread_mutex_t thread_counter_lock;
+pthread_t thread[NUM_THREADS];
+
+// Global vars
 double sum = 0.0;
-double x = 0.0;
 double st = 1.0/NUM_ITER;
 
-void eulers_method()
+int new_thread_id() {
+    int rv;
+    pthread_mutex_lock(&thread_counter_lock);
+    rv = thread_counter++;
+    pthread_mutex_unlock(&thread_counter_lock);
+    return rv;
+}
+
+void *eulers_method(void *tid)
 {
-    for (i = 0; i < NUM_ITER; i++)
+    int i, start, *mytid, end;
+    double x = 0.0;
+    double local_sum = 0.0;
+    int blockid = new_thread_id();
+
+    start = blockid * (NUM_ITER/NUM_THREADS);
+    end = (blockid + 1) * (NUM_ITER/NUM_THREADS);
+    if(blockid == NUM_THREADS - 1) end = NUM_ITER;
+
+    printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
+
+    for (i = start; i < end; i++)
     {
         x = (i + 0.25)*st;
-        sum += 4.0/(x*x+1);
+        local_sum += 4.0/(x*x+1);
     }
+
+    pthread_mutex_lock(&mutexsum);
+    sum += local_sum;
+    pthread_mutex_unlock(&mutexsum);
+    pthread_exit(NULL);
 }
 
 void print_results()
@@ -31,13 +62,27 @@ void print_results()
 
 int main(int argc, char *argv[])
 {
-    gethostname(hostname, 1023);
+    int i;
 
+    pthread_mutex_init(&mutexsum, NULL);
+    pthread_mutex_init(&thread_counter_lock, NULL);
+
+    gethostname(hostname, 1023);
     printf("DEBUG: starting on %s\n", hostname);
 
     gettimeofday(&t1, NULL);
 
-    eulers_method();
+    for(i = 0; i < NUM_THREADS; i++)
+    {
+        if(pthread_create(&thread[i], NULL, eulers_method, NULL))
+            fprintf(stderr, "Thread creation failed on %s for thread %d", hostname, i);
+    }
+
+    for(i = 0; i < NUM_THREADS; i++)
+    {
+        if(pthread_join(thread[i], NULL))
+            fprintf(stderr, "Thread joining failed on %s for thread %d", hostname, i);
+    }
 
     gettimeofday(&t2, NULL);
 
@@ -46,5 +91,7 @@ int main(int argc, char *argv[])
 
     print_results();
 
-    return 0;
+    pthread_mutex_destroy(&mutexsum);
+    pthread_mutex_destroy(&thread_counter_lock);
+    pthread_exit(NULL);
 }
