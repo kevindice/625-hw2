@@ -11,3 +11,8 @@ for x in {1..50}
 do
     /homes/kmdice/625/hw2/pthreads $NSLOTS
 done;
+
+for x in {1..50}
+do
+    /homes/kmdice/625/hw2/openmp $NSLOTS
+done;
