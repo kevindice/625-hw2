@@ -4,3 +4,4 @@ pthreads
 serial
 
 run-all.sh.o*
+run-all.sh.po*
