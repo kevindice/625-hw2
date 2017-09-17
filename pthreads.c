@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define NUM_ITER 1000000000
-#define NUM_THREADS 2
+int num_threads;
 
 // timing and info
 struct timeval t1, t2;
@@ -16,7 +16,7 @@ char hostname[1024];
 int thread_counter = 0;
 pthread_mutex_t mutexsum;
 pthread_mutex_t thread_counter_lock;
-pthread_t thread[NUM_THREADS];
+pthread_t *thread;
 
 // Global vars
 double sum = 0.0;
@@ -37,9 +37,9 @@ void *eulers_method(void *tid)
     double local_sum = 0.0;
     int blockid = new_thread_id();
 
-    start = blockid * (NUM_ITER/NUM_THREADS);
-    end = (blockid + 1) * (NUM_ITER/NUM_THREADS);
-    if(blockid == NUM_THREADS - 1) end = NUM_ITER;
+    start = blockid * (NUM_ITER/num_threads);
+    end = (blockid + 1) * (NUM_ITER/num_threads);
+    if(blockid == num_threads - 1) end = NUM_ITER;
 
     printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
 
@@ -63,8 +63,15 @@ void print_results()
 
 int main(int argc, char *argv[])
 {
-    int i;
+    if(argc != 2){
+        printf("Usage: %s <number of threads>\n", argv[0]);
+        exit(1);
+    }
 
+    int i;
+    num_threads = atoi(argv[1]);
+
+    thread = malloc(num_threads * sizeof(pthread_t));
     pthread_mutex_init(&mutexsum, NULL);
     pthread_mutex_init(&thread_counter_lock, NULL);
 
@@ -73,13 +80,13 @@ int main(int argc, char *argv[])
 
     gettimeofday(&t1, NULL);
 
-    for(i = 0; i < NUM_THREADS; i++)
+    for(i = 0; i < num_threads; i++)
     {
         if(pthread_create(&thread[i], NULL, eulers_method, NULL))
             fprintf(stderr, "Thread creation failed on %s for thread %d", hostname, i);
     }
 
-    for(i = 0; i < NUM_THREADS; i++)
+    for(i = 0; i < num_threads; i++)
     {
         if(pthread_join(thread[i], NULL))
             fprintf(stderr, "Thread joining failed on %s for thread %d", hostname, i);
@@ -94,5 +101,7 @@ int main(int argc, char *argv[])
 
     pthread_mutex_destroy(&mutexsum);
     pthread_mutex_destroy(&thread_counter_lock);
+    free(thread);
+
     pthread_exit(NULL);
 }
