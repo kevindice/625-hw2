@@ -8,3 +8,6 @@ pthreads: pthreads.c
 
 openmp: openmp.c
 	cc openmp.c -o openmp
+
+cleanup:
+	rm run-all.sh.*

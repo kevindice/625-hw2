@@ -3,3 +3,4 @@ openmp
 pthreads
 serial
 
+run-all.sh.o*
