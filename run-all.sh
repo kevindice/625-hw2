@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -l mem=512M
-#$ -l h_rt=0:10:00
+#$ -l mem=32M
+#$ -l h_rt=0:15:00
 #$ -t 1-20
 #$ -cwd
 #$ -j y
