@@ -60,7 +60,7 @@ void *eulers_method(void *tid)
 
 void print_results()
 {
-    printf("DATA\t%s\t%d\t%f\t%f\n", hostname, num_threads, elapsedTime, sum);
+    printf("DATA\t%s\t%d\t%f\t%f\tpthread\n", hostname, num_threads, elapsedTime, sum);
 }
 
 int main(int argc, char *argv[])
