@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -8,6 +9,7 @@
 int num_threads;
 
 // timing and info
+int debug_flag;
 struct timeval t1, t2;
 double elapsedTime;
 char hostname[1024];
@@ -41,13 +43,13 @@ void *eulers_method(void *tid)
     end = (blockid + 1) * (NUM_ITER/num_threads);
     if(blockid == num_threads - 1) end = NUM_ITER;
 
-    printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
+    if(debug_flag) printf("My thread id is %d, and I'm working on %d thru %d\n", blockid, start, end);
 
     for (i = start; i < end; i++)
     {
         x = (i + 0.25)*st;
         local_sum += 4.0/(x*x+1);
-        if(!(i%100000000)) printf("Prog\tThread %d\tIteration %d\n", blockid, i);
+        if(debug_flag && !(i%100000000)) printf("Prog\tThread %d\tIteration %d\n", blockid, i);
     }
 
     pthread_mutex_lock(&mutexsum);
@@ -58,15 +60,19 @@ void *eulers_method(void *tid)
 
 void print_results()
 {
-    printf("DATA\t%s\t%f\t%f\n", hostname, elapsedTime, sum);
+    printf("DATA\t%s\t%d\t%f\t%f\n", hostname, num_threads, elapsedTime, sum);
 }
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2){
+    if(argc < 2 || argc > 3 || (argc == 3 && strcmp(argv[2], "-v")) ){
         printf("Usage: %s <number of threads>\n", argv[0]);
+        printf("Optionally, you may use the -v flag for details on division of work among processes.\n\n");
         exit(1);
     }
+
+    debug_flag = (argc == 3);
+
 
     int i;
     num_threads = atoi(argv[1]);
@@ -76,7 +82,7 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&thread_counter_lock, NULL);
 
     gethostname(hostname, 1023);
-    printf("DEBUG: starting on %s\n", hostname);
+    printf("DEBUG: starting on %s with %d threads\n", hostname, num_threads);
 
     gettimeofday(&t1, NULL);
 
